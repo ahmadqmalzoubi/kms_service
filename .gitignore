@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# VS Code / PyCharm settings (optional)
+.vscode/
+.idea/
+
+# Environment files
+.env
+*.env
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Uvicorn reload artifacts
+*.pid
+
+# Coverage & test reports
+htmlcov/
+coverage.xml
+.cache/
+.pytest_cache/
