@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  kms-service:
+    build: .
+    container_name: kms-service
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-your-secret-api-key}
+      - KMS_BACKEND_URL=${KMS_BACKEND_URL:-http://kms-crypto:9000}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-100}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - kms-crypto
+    networks:
+      - kms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: kms-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - kms-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  kms-crypto:
+    image: kms-crypto:latest
+    container_name: kms-crypto
+    ports:
+      - "9000:9000"
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+    volumes:
+      - crypto_data:/app/data
+    networks:
+      - kms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  redis_data:
+  crypto_data:
+
+networks:
+  kms-network:
+    driver: bridge 
